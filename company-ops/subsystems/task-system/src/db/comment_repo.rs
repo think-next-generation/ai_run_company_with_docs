@@ -1,44 +1,37 @@
-//! Comment repository implementation
+//! SQLite implementation of CommentRepository
+//!
+//! Provides type-safe database operations for comments using sqlx.
 
-use crate::core::Comment;
-use crate::db::pool::DbPool;
-use crate::db::repository::Repository;
+use async_trait::async_trait;
+use sqlx::SqlitePool;
 
-/// Comment repository for database operations
-pub struct CommentRepository {
-    pool: DbPool,
+use crate::core::*;
+use crate::db::{DbPool, CommentRepository as CommentRepositoryTrait};
+use crate::error::Result;
+
+/// SQLite-based comment repository implementation
+pub struct SqliteCommentRepository {
+    pool: SqlitePool,
 }
 
-impl CommentRepository {
-    /// Create a new comment repository
-    pub fn new(pool: DbPool) -> Self {
-        Self { pool }
+impl SqliteCommentRepository {
+    /// Create a new SQLite comment repository
+    pub fn new(pool: &DbPool) -> Self {
+        Self {
+            pool: pool.as_sqlite().clone(),
+        }
     }
 }
 
-impl Repository<Comment> for CommentRepository {
-    async fn find_all(&self) -> crate::Result<Vec<Comment>> {
-        // TODO: Implement later
+#[async_trait]
+impl CommentRepositoryTrait for SqliteCommentRepository {
+    async fn create(&self, _task_id: uuid::Uuid, _comment: &CreateComment) -> Result<Comment> {
+        // TODO: Implement in future task
+        todo!("CommentRepository::create not yet implemented")
+    }
+
+    async fn find_by_task(&self, _task_id: uuid::Uuid) -> Result<Vec<Comment>> {
+        // TODO: Implement in future task
         Ok(Vec::new())
-    }
-
-    async fn find_by_id(&self, _id: uuid::Uuid) -> crate::Result<Option<Comment>> {
-        // TODO: Implement later
-        Ok(None)
-    }
-
-    async fn create(&self, _entity: Comment) -> crate::Result<Comment> {
-        // TODO: Implement later
-        todo!("Implement later")
-    }
-
-    async fn update(&self, _entity: Comment) -> crate::Result<Comment> {
-        // TODO: Implement later
-        todo!("Implement later")
-    }
-
-    async fn delete(&self, _id: uuid::Uuid) -> crate::Result<()> {
-        // TODO: Implement later
-        Ok(())
     }
 }

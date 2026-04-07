@@ -1,44 +1,47 @@
-//! Question repository implementation
+//! SQLite implementation of QuestionRepository
+//!
+//! Provides type-safe database operations for questions using sqlx.
 
-use crate::core::Question;
-use crate::db::pool::DbPool;
-use crate::db::repository::Repository;
+use async_trait::async_trait;
+use sqlx::SqlitePool;
 
-/// Question repository for database operations
-pub struct QuestionRepository {
-    pool: DbPool,
+use crate::core::*;
+use crate::db::{DbPool, QuestionRepository as QuestionRepositoryTrait};
+use crate::error::Result;
+
+/// SQLite-based question repository implementation
+pub struct SqliteQuestionRepository {
+    pool: SqlitePool,
 }
 
-impl QuestionRepository {
-    /// Create a new question repository
-    pub fn new(pool: DbPool) -> Self {
-        Self { pool }
+impl SqliteQuestionRepository {
+    /// Create a new SQLite question repository
+    pub fn new(pool: &DbPool) -> Self {
+        Self {
+            pool: pool.as_sqlite().clone(),
+        }
     }
 }
 
-impl Repository<Question> for QuestionRepository {
-    async fn find_all(&self) -> crate::Result<Vec<Question>> {
-        // TODO: Implement later
-        Ok(Vec::new())
+#[async_trait]
+impl QuestionRepositoryTrait for SqliteQuestionRepository {
+    async fn create(&self, _task_id: uuid::Uuid, _question: &CreateQuestion) -> Result<Question> {
+        // TODO: Implement in future task
+        todo!("QuestionRepository::create not yet implemented")
     }
 
-    async fn find_by_id(&self, _id: uuid::Uuid) -> crate::Result<Option<Question>> {
-        // TODO: Implement later
+    async fn find_by_id(&self, _id: uuid::Uuid) -> Result<Option<Question>> {
+        // TODO: Implement in future task
         Ok(None)
     }
 
-    async fn create(&self, _entity: Question) -> crate::Result<Question> {
-        // TODO: Implement later
-        todo!("Implement later")
+    async fn find_by_task(&self, _task_id: uuid::Uuid) -> Result<Vec<Question>> {
+        // TODO: Implement in future task
+        Ok(Vec::new())
     }
 
-    async fn update(&self, _entity: Question) -> crate::Result<Question> {
-        // TODO: Implement later
-        todo!("Implement later")
-    }
-
-    async fn delete(&self, _id: uuid::Uuid) -> crate::Result<()> {
-        // TODO: Implement later
-        Ok(())
+    async fn answer(&self, _id: uuid::Uuid, _answer: &AnswerQuestion) -> Result<Question> {
+        // TODO: Implement in future task
+        todo!("QuestionRepository::answer not yet implemented")
     }
 }

@@ -9,7 +9,7 @@ mod event_repo;
 
 pub use pool::*;
 pub use repository::*;
-pub use task_repo::*;
-pub use question_repo::*;
-pub use comment_repo::*;
-pub use event_repo::*;
+pub use task_repo::SqliteTaskRepository;
+pub use question_repo::SqliteQuestionRepository;
+pub use comment_repo::SqliteCommentRepository;
+pub use event_repo::SqliteEventRepository;

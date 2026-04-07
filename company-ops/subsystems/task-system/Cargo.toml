@@ -29,6 +29,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 toml = "0.8"
 dirs = "5"
+async-trait = "0.1"
 rust-embed = "8"
 mime_guess = "2"
 

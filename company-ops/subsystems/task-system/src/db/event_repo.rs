@@ -1,44 +1,37 @@
-//! Event repository implementation
+//! SQLite implementation of EventRepository
+//!
+//! Provides type-safe database operations for events using sqlx.
 
-use crate::core::Event;
-use crate::db::pool::DbPool;
-use crate::db::repository::Repository;
+use async_trait::async_trait;
+use sqlx::SqlitePool;
 
-/// Event repository for database operations
-pub struct EventRepository {
-    pool: DbPool,
+use crate::core::*;
+use crate::db::{DbPool, EventRepository as EventRepositoryTrait};
+use crate::error::Result;
+
+/// SQLite-based event repository implementation
+pub struct SqliteEventRepository {
+    pool: SqlitePool,
 }
 
-impl EventRepository {
-    /// Create a new event repository
-    pub fn new(pool: DbPool) -> Self {
-        Self { pool }
+impl SqliteEventRepository {
+    /// Create a new SQLite event repository
+    pub fn new(pool: &DbPool) -> Self {
+        Self {
+            pool: pool.as_sqlite().clone(),
+        }
     }
 }
 
-impl Repository<Event> for EventRepository {
-    async fn find_all(&self) -> crate::Result<Vec<Event>> {
-        // TODO: Implement later
+#[async_trait]
+impl EventRepositoryTrait for SqliteEventRepository {
+    async fn append(&self, _event: &Event) -> Result<()> {
+        // TODO: Implement in future task
+        todo!("EventRepository::append not yet implemented")
+    }
+
+    async fn find_since(&self, _since: chrono::DateTime<chrono::Utc>) -> Result<Vec<Event>> {
+        // TODO: Implement in future task
         Ok(Vec::new())
-    }
-
-    async fn find_by_id(&self, _id: uuid::Uuid) -> crate::Result<Option<Event>> {
-        // TODO: Implement later
-        Ok(None)
-    }
-
-    async fn create(&self, _entity: Event) -> crate::Result<Event> {
-        // TODO: Implement later
-        todo!("Implement later")
-    }
-
-    async fn update(&self, _entity: Event) -> crate::Result<Event> {
-        // TODO: Implement later
-        todo!("Implement later")
-    }
-
-    async fn delete(&self, _id: uuid::Uuid) -> crate::Result<()> {
-        // TODO: Implement later
-        Ok(())
     }
 }
