@@ -138,6 +138,14 @@ impl TaskRepository for SqliteTaskRepository {
             params.push(parent.to_string());
         }
 
+        if let Some(blocked) = filters.blocked {
+            if blocked {
+                query.push_str(" AND blocked_by != '[]'");
+            } else {
+                query.push_str(" AND blocked_by = '[]'");
+            }
+        }
+
         query.push_str(" ORDER BY created_at DESC");
 
         // Build dynamic query with parameters
