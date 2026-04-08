@@ -1,0 +1,56 @@
+# Company-ops document system
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+venv/
+.venv/
+
+# Node.js (if any tools use it)
+node_modules/
+npm-debug.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+
+# Logs
+*.log
+logs/
+!orchestrator/logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*~
+
+# Secrets (never commit these)
+.env
+.env.*
+*.pem
+*.key
+secrets/
+
+# Graph cache
+.system/graph-cache/*.lock
+.system/graph-cache/*.tmp
+
+# Human inbox processed items
+human/inbox/*.processed
+
+# Local editor settings
+*.sublime-*
