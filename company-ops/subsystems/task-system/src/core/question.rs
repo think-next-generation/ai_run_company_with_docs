@@ -36,6 +36,50 @@ impl Default for Urgency {
     }
 }
 
+impl std::fmt::Display for QuestionType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::OpenEnded => write!(f, "OPEN_ENDED"),
+            Self::SingleChoice => write!(f, "SINGLE_CHOICE"),
+            Self::MultiChoice => write!(f, "MULTI_CHOICE"),
+        }
+    }
+}
+
+impl std::str::FromStr for QuestionType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_uppercase().replace("-", "_").as_str() {
+            "OPEN_ENDED" | "OPENENDED" => Ok(Self::OpenEnded),
+            "SINGLE_CHOICE" => Ok(Self::SingleChoice),
+            "MULTI_CHOICE" => Ok(Self::MultiChoice),
+            _ => Err(format!("Invalid question type: {}", s)),
+        }
+    }
+}
+impl std::fmt::Display for Urgency {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Low => write!(f, "low"),
+            Self::Normal => write!(f, "normal"),
+            Self::High => write!(f, "high"),
+        }
+    }
+}
+impl std::str::FromStr for Urgency {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "low" => Ok(Self::Low),
+            "normal" => Ok(Self::Normal),
+            "high" => Ok(Self::High),
+            _ => Err(format!("Invalid urgency: {}", s)),
+        }
+    }
+}
+
 /// Core Question entity for structured Q&A
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Question {

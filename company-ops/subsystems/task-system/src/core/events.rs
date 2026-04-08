@@ -1,4 +1,6 @@
 //! Events module - audit log tracking all entity changes
+//!
+//! Events module - audit log tracking all entity changes
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -16,6 +18,29 @@ pub enum EntityType {
     Comment,
 }
 
+impl std::fmt::Display for EntityType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Task => write!(f, "TASK"),
+            Self::Question => write!(f, "QUESTION"),
+            Self::Comment => write!(f, "COMMENT"),
+        }
+    }
+}
+
+impl std::str::FromStr for EntityType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_uppercase().as_str() {
+            "TASK" => Ok(Self::Task),
+            "QUESTION" => Ok(Self::Question),
+            "COMMENT" => Ok(Self::Comment),
+            _ => Err(format!("Invalid entity type: {}", s)),
+        }
+    }
+}
+
 /// Type of event that occurred
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
 #[sqlx(type_name = "TEXT")]
@@ -26,6 +51,33 @@ pub enum EventType {
     StatusChanged,
     Answered,
     Deleted,
+}
+
+impl std::fmt::Display for EventType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Created => write!(f, "CREATED"),
+            Self::Updated => write!(f, "UPDATED"),
+            Self::StatusChanged => write!(f, "STATUS_CHANGED"),
+            Self::Answered => write!(f, "ANSWERED"),
+            Self::Deleted => write!(f, "DELETED"),
+        }
+    }
+}
+
+impl std::str::FromStr for EventType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_uppercase().replace("-", "_").as_str() {
+            "CREATED" => Ok(Self::Created),
+            "UPDATED" => Ok(Self::Updated),
+            "STATUS_CHANGED" | "STATUSCHANGED" => Ok(Self::StatusChanged),
+            "ANSWERED" => Ok(Self::Answered),
+            "DELETED" => Ok(Self::Deleted),
+            _ => Err(format!("Invalid event type: {}", s)),
+        }
+    }
 }
 
 /// Core Event entity for audit logging

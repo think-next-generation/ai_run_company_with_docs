@@ -4,7 +4,9 @@ mod args;
 mod board;
 mod comment;
 mod config_cmd;
+mod ctx;
 mod db_cmd;
+mod output;
 mod question;
 mod status;
 mod task;
@@ -27,15 +29,24 @@ pub fn run() -> anyhow::Result<()> {
 
     let rt = tokio::runtime::Runtime::new()?;
     rt.block_on(async {
+        // Initialize context with config and database
+        let ctx = match ctx::Ctx::init(args.config.as_ref()).await {
+            Ok(ctx) => ctx,
+            Err(e) => {
+                eprintln!("Error initializing: {}", e);
+                std::process::exit(1);
+            }
+        };
+
         match args.command {
-            Commands::Task(cmd) => task::handle(cmd).await,
-            Commands::Board(cmd) => board::handle(cmd).await,
-            Commands::Question(cmd) => question::handle(cmd).await,
-            Commands::Comment(cmd) => comment::handle(cmd).await,
-            Commands::Status(cmd) => status::handle(cmd).await,
-            Commands::Config(cmd) => config_cmd::handle(cmd).await,
-            Commands::Db(cmd) => db_cmd::handle(cmd).await,
-            Commands::Web(cmd) => web::handle(cmd).await,
+            Commands::Task(cmd) => task::handle(cmd, &ctx).await,
+            Commands::Board(cmd) => board::handle(cmd, &ctx).await,
+            Commands::Question(cmd) => question::handle(cmd, &ctx).await,
+            Commands::Comment(cmd) => comment::handle(cmd, &ctx).await,
+            Commands::Status(cmd) => status::handle(cmd, &ctx).await,
+            Commands::Config(cmd) => config_cmd::handle(cmd, &ctx).await,
+            Commands::Db(cmd) => db_cmd::handle(cmd, &ctx).await,
+            Commands::Web(cmd) => web::handle(cmd, &ctx).await,
         }
     })?;
 

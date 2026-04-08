@@ -19,6 +19,26 @@ impl Default for AuthorType {
     }
 }
 
+impl std::fmt::Display for AuthorType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Agent => write!(f, "AGENT"),
+            Self::Human => write!(f, "HUMAN"),
+        }
+    }
+}
+impl std::str::FromStr for AuthorType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_uppercase().as_str() {
+            "AGENT" => Ok(Self::Agent),
+            "HUMAN" => Ok(Self::Human),
+            _ => Err(format!("Invalid author type: {}", s)),
+        }
+    }
+}
+
 /// Core Comment entity for task discussions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Comment {
