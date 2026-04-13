@@ -45,6 +45,8 @@ logs/
 *.key
 secrets/
 
+.superpowers
+
 # Graph cache
 .system/graph-cache/*.lock
 .system/graph-cache/*.tmp

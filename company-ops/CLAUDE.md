@@ -8,36 +8,36 @@
 
 ## 职责
 
-1. **系统监控**: 每 5 分钟检查任务系统状态
+1. **系统监控**: 每 10 分钟检查任务系统状态
 2. **问题处理**: 发现未回答问题并协调处理
 3. **任务协调**: 分析任务状态，思考推进策略
-4. **子系统协调**: 通过文件系统与子系统 Agent 通信
-5. **人类反馈**: 通过 cc-connector skill 推送建议给人类
+4. **子系统通信**: 通过 inbox/outbox 文件系统与子系统 Agent 通信
+5. **人类反馈**: 通过 cc-connect skill 推送建议给人类
 
 ## 定时监控任务
 
-你有一个定时任务，每 5 分钟唤醒一次执行监控循环。
+你有一个定时任务，每 10 分钟唤醒一次执行监控循环。
 
 ### 监控步骤
 
 1. **检查系统状态**
    ```bash
-   cops status
+   sqlite3 subsystems/task-system/data/cops.db "SELECT id, title, status, priority FROM tasks ORDER BY updated_at DESC;"
    ```
 
 2. **检查未回答问题**
    ```bash
-   cops question list --unanswered
+   sqlite3 subsystems/task-system/data/cops.db "SELECT id, question_text, urgency FROM questions WHERE answer IS NULL;"
    ```
 
-3. **查看任务看板**
-   ```bash
-   cops board show
-   ```
-
-4. **检查子系统状态**
+3. **查看子系统状态**
    ```bash
    cat subsystems/_registry.json
+   ```
+
+4. **检查收件箱**
+   ```bash
+   ls shared/messages/inbox-orchestrator/
    ```
 
 ### 决策逻辑
@@ -49,28 +49,138 @@
 | 长期无更新的任务 | 检查进度，考虑是否需要干预 |
 | 未回答的问题 | 判断是否需要升级给人类 |
 | 子系统异常 | 记录日志，通知人类 |
+| inbox 中有新消息 | 读取并处理，写回复到对应 outbox |
 
-## 与子系统通信
+## Agent 间通信协议
 
-使用文件系统的 inbox/outbox 机制：
+三层机制配合实现 Agent 间通信：
 
-### 发送消息给子系统
-```bash
-echo '{
-  "type": "task_assignment",
-  "task_id": "xxx",
-  "content": "请处理此任务"
-}' > subsystems/财务/inbox/message_$(date +%s).json
+1. **cmux send** — 即时通知：在 cmux 终端内向目标 tab 注入文本，立即唤醒对方
+2. **inbox/outbox** — 结构化消息：通过文件传递完整的 JSON 消息和回复
+3. **CronCreate 轮询** — 兜底检查：每 10 分钟检查 inbox 和 outbox，处理遗漏的消息
+
+### 目录结构
+
+```
+shared/messages/
+├── inbox-orchestrator/    ← 发给 Orchestrator 的消息
+├── inbox-finance/         ← 发给财务子系统 的消息
+├── inbox-legal/           ← 发给法务子系统的消息
+├── outbox-orchestrator/   ← Orchestrator 的回复
+├── outbox-finance/        ← 财务的回复
+├── outbox-legal/          ← 法务的回复
+└── processed/             ← 已处理的消息归档
 ```
 
-### 接收子系统消息
+### 消息文件命名
+
+格式: `msg_YYYYMMDD_HHMMSS.json`
+
 ```bash
-cat subsystems/财务/outbox/*.json
+# 生成文件名示例
+filename="msg_$(date +%Y%m%d_%H%M%S).json"
+# 结果: msg_20260409_103302.json
+```
+
+回复文件: `reply_YYYYMMDD_HHMMSS.json`
+
+### 消息格式
+
+**发送消息:**
+```json
+{
+  "id": "msg_20260409_103302",
+  "from": "orchestrator",
+  "to": "finance",
+  "type": "question|task_assignment|notification",
+  "content": "消息内容",
+  "created_at": "2026-04-09T10:33:02+08:00"
+}
+```
+
+**回复消息:**
+```json
+{
+  "id": "reply_20260409_103345",
+  "in_reply_to": "msg_20260409_103302",
+  "from": "finance",
+  "to": "orchestrator",
+  "type": "answer|status_update|ack",
+  "content": "回复内容",
+  "created_at": "2026-04-09T10:33:45+08:00"
+}
+```
+
+### 发送消息给子系统
+
+```bash
+# 1. 写消息文件到 inbox
+filename="msg_$(date +%Y%m%d_%H%M%S).json"
+cat > "shared/messages/inbox-finance/$filename" << 'EOF'
+{
+  "id": "msg_20260409_103302",
+  "from": "orchestrator",
+  "to": "finance",
+  "type": "question",
+  "content": "本月财务报表准备好了吗？",
+  "created_at": "2026-04-09T10:33:02+08:00"
+}
+EOF
+
+# 2. 通过 cmux send 即时通知目标 Agent
+# 先查找目标 surface ID: cmux list-surfaces
+# 然后发送通知:
+cmux send --surface <surface-id> "收到新消息，请读取 inbox-finance$(printf '\n')"
+```
+
+### 完整通信流程
+
+```
+发送方 (Orchestrator)                         接收方 (财务)
+───────────────────                          ──────────────
+1. 写 msg_*.json 到 inbox-finance/
+2. cmux send 通知对方                         3. 收到注入文本
+                                             4. 读取并处理消息
+                                             5. 写 reply_*.json 到 outbox-finance/
+                                             6. 将原消息移到 processed/
+                                             7. cmux send 通知发送方
+8. CronCreate 轮询检查 outbox-finance/
+9. 读取回复内容
+```
+
+### 检查并处理 inbox
+
+```bash
+# 列出收件箱中的消息
+ls shared/messages/inbox-orchestrator/
+
+# 读取消息
+cat shared/messages/inbox-orchestrator/msg_20260409_103302.json
+
+# 处理完毕后归档
+mv shared/messages/inbox-orchestrator/msg_20260409_103302.json shared/messages/processed/
+```
+
+### 写回复到 outbox
+
+```bash
+filename="reply_$(date +%Y%m%d_%H%M%S).json"
+cat > "shared/messages/outbox-orchestrator/$filename" << 'EOF'
+{
+  "id": "reply_20260409_103345",
+  "in_reply_to": "msg_20260409_103302",
+  "from": "orchestrator",
+  "to": "finance",
+  "type": "answer",
+  "content": "已了解，请继续准备。",
+  "created_at": "2026-04-09T10:33:45+08:00"
+}
+EOF
 ```
 
 ## 向人类反馈
 
-使用 cc-connector skill 推送消息：
+使用 cc-connect skill 推送消息：
 
 - 紧急问题立即推送
 - 重要决策建议推送
