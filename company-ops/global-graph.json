@@ -132,6 +132,21 @@
     },
 
     {
+      "id": "resource.llm-wiki",
+      "type": "resource",
+      "name": "LLM Wiki",
+      "description": "Karpathy方法论驱动的知识库，支持文档摄入、查询和lint",
+      "properties": {
+        "type": "knowledge_base",
+        "path": "~/wiki",
+        "access_level": "active",
+        "status": "available"
+      },
+      "created_at": "2026-04-13T00:00:00Z",
+      "updated_at": "2026-04-13T00:00:00Z"
+    },
+
+    {
       "id": "goal.company.mvp-system",
       "type": "goal",
       "name": "完成MVP系统",
@@ -332,6 +347,17 @@
       "properties": {
         "trigger_type": "human_input"
       }
+    },
+
+    {
+      "id": "rel-013",
+      "type": "uses",
+      "source": "resource.claude-code",
+      "target": "resource.llm-wiki",
+      "weight": 1.0,
+      "properties": {
+        "usage": "knowledge_query"
+      }
     }
   ],
 
@@ -347,7 +373,8 @@
     "resource": [
       "resource.cmux",
       "resource.feishu",
-      "resource.claude-code"
+      "resource.claude-code",
+      "resource.llm-wiki"
     ],
 
     "goal": [
