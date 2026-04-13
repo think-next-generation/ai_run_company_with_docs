@@ -1,0 +1,201 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://company-ops.local/schemas/registry.schema.json",
+  "title": "Subsystem Registry Schema",
+  "description": "Schema for the subsystem registry (_registry.json)",
+  "type": "object",
+
+  "required": [
+    "version",
+    "updated_at",
+    "subsystems"
+  ],
+
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+
+    "subsystems": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "path", "status", "version"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string",
+            "description": "Relative path to subsystem directory"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["planned", "active", "inactive", "error"]
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$"
+          },
+
+          "agent": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["claude-code", "codex", "custom"]
+              },
+              "instance_id": {
+                "type": "string"
+              },
+              "last_heartbeat": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["starting", "running", "idle", "stopped", "error"]
+              }
+            }
+          },
+
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of capability IDs"
+          },
+
+          "provides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "service": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                },
+                "endpoint": {
+                  "type": "string",
+                  "description": "How to access this service (negotiate, api, etc)"
+                }
+              }
+            }
+          },
+
+          "consumes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "service": {
+                  "type": "string"
+                },
+                "provider": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+
+          "metrics": {
+            "type": "object",
+            "properties": {
+              "tasks_completed": {
+                "type": "integer"
+              },
+              "tasks_in_progress": {
+                "type": "integer"
+              },
+              "avg_response_time_ms": {
+                "type": "number"
+              },
+              "success_rate": {
+                "type": "number"
+              },
+              "satisfaction_rate": {
+                "type": "number"
+              }
+            }
+          },
+
+          "priority": {
+            "type": "string",
+            "enum": ["critical", "high", "normal", "low"]
+          },
+
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+
+          "last_activity": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+
+    "service_index": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "description": "Map from service name to list of subsystems providing it"
+    },
+
+    "dependency_graph": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "description": "Map from subsystem to list of subsystems it depends on"
+    },
+
+    "compatibility_matrix": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "compatible": {
+              "type": "boolean"
+            },
+            "notes": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "description": "Version compatibility between subsystems"
+    }
+  }
+}

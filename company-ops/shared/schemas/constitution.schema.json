@@ -1,0 +1,317 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://company-ops.local/schemas/constitution.schema.json",
+  "title": "CONSTITUTION Schema",
+  "description": "Schema for the system constitution file (CONSTITUTION.yaml)",
+  "type": "object",
+
+  "required": [
+    "version",
+    "effective_date",
+    "global_constraints",
+    "subsystem_rules",
+    "human_roles"
+  ],
+
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of the constitution"
+    },
+
+    "effective_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date when this constitution becomes effective"
+    },
+
+    "last_updated": {
+      "type": "string",
+      "format": "date",
+      "description": "Last update date"
+    },
+
+    "global_constraints": {
+      "type": "object",
+      "required": ["security", "ethics", "resources"],
+      "properties": {
+        "security": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "rule", "scope"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^SEC-\\d{3}$"
+              },
+              "rule": {
+                "type": "string",
+                "minLength": 1
+              },
+              "scope": {
+                "type": "string",
+                "enum": ["all", "tech", "product", "operations", "finance", "legal"]
+              },
+              "enforcement": {
+                "type": "string",
+                "enum": ["strict", "moderate", "advisory"]
+              },
+              "description": {
+                "type": "string"
+              }
+            }
+          }
+        },
+
+        "ethics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "rule"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^ETH-\\d{3}$"
+              },
+              "rule": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": {
+                "type": "string"
+              },
+              "scope": {
+                "type": "string"
+              }
+            }
+          }
+        },
+
+        "resources": {
+          "type": "object",
+          "properties": {
+            "max_concurrent_agents": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "max_task_duration_hours": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "auto_shutdown_idle_minutes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "max_memory_per_agent_mb": {
+              "type": "integer",
+              "minimum": 64
+            },
+            "max_file_size_mb": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "rate_limits": {
+              "type": "object",
+              "properties": {
+                "api_calls_per_minute": {
+                  "type": "integer"
+                },
+                "file_operations_per_minute": {
+                  "type": "integer"
+                },
+                "messages_per_minute": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "subsystem_rules": {
+      "type": "object",
+      "required": ["autonomy", "evolution"],
+      "properties": {
+        "autonomy": {
+          "type": "object",
+          "required": ["can_decide", "must_confirm"],
+          "properties": {
+            "can_decide": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "must_confirm": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+
+        "evolution": {
+          "type": "object",
+          "required": ["independent_changes", "requires_negotiation"],
+          "properties": {
+            "independent_changes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "requires_negotiation": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "versioning": {
+              "type": "object",
+              "properties": {
+                "major_change_threshold": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "minor_change_threshold": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "patch_change_threshold": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "human_roles": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["permissions"],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "interaction_channels": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "channel": {
+                  "type": "string"
+                },
+                "purpose": {
+                  "type": "string"
+                },
+                "priority": {
+                  "type": "string",
+                  "enum": ["low", "normal", "high", "critical"]
+                }
+              }
+            }
+          },
+          "notification_preferences": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "conflict_resolution": {
+      "type": "object",
+      "properties": {
+        "priority_order": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "level": {
+                "type": "integer"
+              },
+              "source": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "override_all": {
+                "type": "boolean"
+              },
+              "override_below": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "escalation": {
+          "type": "object",
+          "properties": {
+            "negotiation_timeout_minutes": {
+              "type": "integer"
+            },
+            "notify_human_on_timeout": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+
+    "changelog": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["version", "date", "changes"],
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "author": {
+            "type": "string"
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

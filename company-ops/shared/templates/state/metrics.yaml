@@ -1,0 +1,126 @@
+# metrics.yaml - 子系统指标数据
+# 版本: 1.0.0
+
+updated_at: "YYYY-MM-DDTHH:MM:SSZ"
+period: "daily"  # daily, weekly, monthly
+
+# ============================================================================
+# 任务指标
+# ============================================================================
+
+tasks:
+  # 任务数量统计
+  total: 0
+  completed: 0
+  in_progress: 0
+  blocked: 0
+  cancelled: 0
+
+  # 时间统计
+  avg_completion_time_hours: 0
+  avg_wait_time_hours: 0
+  on_time_delivery_rate: 0
+
+  # 质量统计
+  first_time_success_rate: 0
+  rework_rate: 0
+
+# ============================================================================
+# 质量指标
+# ============================================================================
+
+quality:
+  # 测试覆盖
+  test_coverage: 0
+  test_pass_rate: 0
+
+  # 缺陷统计
+  bug_rate: 0
+  critical_bugs: 0
+  bugs_resolved: 0
+
+  # 审查统计
+  review_pass_rate: 0
+  avg_review_iterations: 0
+
+# ============================================================================
+# 协作指标
+# ============================================================================
+
+collaboration:
+  # 跨子系统协作
+  cross_subsystem_requests: 0
+  successful_negotiations: 0
+  failed_negotiations: 0
+  escalated_conflicts: 0
+
+  # 响应时间
+  avg_response_time_minutes: 0
+  avg_negotiation_time_minutes: 0
+
+  # 协作满意度
+  satisfaction_score: 0  # 1-5
+
+# ============================================================================
+# 资源指标
+# ============================================================================
+
+resources:
+  # 性能
+  avg_response_time_ms: 0
+  peak_response_time_ms: 0
+  p95_response_time_ms: 0
+
+  # 负载
+  peak_concurrent_tasks: 0
+  avg_concurrent_tasks: 0
+  idle_time_percentage: 0
+
+  # 资源使用
+  memory_usage_mb: 0
+  cpu_usage_percentage: 0
+  disk_usage_gb: 0
+
+# ============================================================================
+# 学习指标
+# ============================================================================
+
+learning:
+  # 学习记录
+  patterns_extracted: 0
+  patterns_applied: 0
+  patterns_effective: 0
+
+  # 规范进化
+  spec_updates: 0
+  auto_updates: 0
+  human_approved_updates: 0
+
+  # 知识积累
+  knowledge_items_added: 0
+  knowledge_items_accessed: 0
+
+# ============================================================================
+# 趋势数据 (最近7天)
+# ============================================================================
+
+trends:
+  daily:
+    - date: "YYYY-MM-DD"
+      tasks_completed: 0
+      success_rate: 0
+      avg_response_time_ms: 0
+    - date: "YYYY-MM-DD"
+      # ...
+
+# ============================================================================
+# 告警阈值
+# ============================================================================
+
+thresholds:
+  response_time_warning_ms: 500
+  response_time_critical_ms: 1000
+  error_rate_warning: 0.05
+  error_rate_critical: 0.10
+  idle_time_warning_percentage: 50
+  memory_usage_warning_mb: 400

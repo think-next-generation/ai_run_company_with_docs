@@ -1,0 +1,213 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://company-ops.local/schemas/graph.schema.json",
+  "title": "Knowledge Graph Schema",
+  "description": "Schema for knowledge graph files (global-graph.json and local-graph.json)",
+  "type": "object",
+
+  "required": [
+    "metadata",
+    "entities",
+    "relations"
+  ],
+
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["version", "updated_at"],
+      "properties": {
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "root_namespace": {
+          "type": "string"
+        },
+        "subsystem_id": {
+          "type": "string",
+          "description": "Only for local graphs"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "entities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "name"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier, e.g., 'company', 'subsystem.tech', 'capability.tech.api-design'"
+          },
+
+          "type": {
+            "type": "string",
+            "enum": [
+              "company",
+              "subsystem",
+              "capability",
+              "goal",
+              "task",
+              "resource",
+              "event",
+              "pattern",
+              "decision",
+              "learning"
+            ]
+          },
+
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+
+          "description": {
+            "type": "string"
+          },
+
+          "properties": {
+            "type": "object",
+            "description": "Additional properties specific to the entity type"
+          },
+
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+
+    "relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "source", "target"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+
+          "type": {
+            "type": "string",
+            "enum": [
+              "owns",
+              "provides",
+              "consumes",
+              "depends_on",
+              "implements",
+              "collaborates_with",
+              "reports_to",
+              "triggers",
+              "blocks",
+              "supports",
+              "breaks_down_to",
+              "learns_from",
+              "applies",
+              "relates_to"
+            ]
+          },
+
+          "source": {
+            "type": "string",
+            "description": "ID of the source entity"
+          },
+
+          "target": {
+            "type": "string",
+            "description": "ID of the target entity"
+          },
+
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 1.0,
+            "description": "Strength or importance of the relation"
+          },
+
+          "properties": {
+            "type": "object",
+            "description": "Additional properties specific to the relation"
+          },
+
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+
+          "valid_from": {
+            "type": "string",
+            "format": "date-time"
+          },
+
+          "valid_until": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+
+    "views": {
+      "type": "object",
+      "description": "Predefined views of the graph",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "properties": {
+        "organizational": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Entity IDs for organizational view"
+        },
+        "capability": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Entity IDs for capability view"
+        },
+        "dependency": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Relation patterns for dependency view"
+        },
+        "goal": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Entity IDs for goal view"
+        }
+      }
+    }
+  }
+}

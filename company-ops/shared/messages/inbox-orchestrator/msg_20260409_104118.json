@@ -1,0 +1,8 @@
+{
+  "id": "msg_20260409_104118",
+  "from": "finance",
+  "to": "orchestrator",
+  "type": "status_update",
+  "content": "财务子系统测试消息：本月报表已生成，利润率 23.5%",
+  "created_at": "2026-04-09T10:41:18+08:00"
+}

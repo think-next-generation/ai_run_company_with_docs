@@ -1,0 +1,365 @@
+{
+  "metadata": {
+    "version": "1.1.0",
+    "updated_at": "2026-04-01T14:30:00Z",
+    "root_namespace": "company",
+    "description": "文档驱动Agent生态系统全局知识图谱 - 文件范围组织模型"
+  },
+
+  "entities": [
+    {
+      "id": "company",
+      "type": "company",
+      "name": "AI软件服务公司",
+      "description": "一人AI股份有限公司，通过文档驱动的Agent系统实现自动化运营",
+      "properties": {
+        "mission": "通过文档驱动的AI Agent协作系统，实现一人股份有限公司的自动化运营",
+        "vision": "成为AI驱动的小型组织运营标杆",
+        "founded": "2026-03-01",
+        "status": "active",
+        "organization_model": "file-scope-based",
+        "deployment": "独立Mac + cmux多工作区"
+      },
+      "created_at": "2026-03-01T00:00:00Z",
+      "updated_at": "2026-04-01T14:30:00Z"
+    },
+
+    {
+      "id": "subsystem.财务",
+      "type": "subsystem",
+      "name": "财务管理子系统",
+      "description": "负责公司财务管理、账务处理、财务报告、预算管理",
+      "properties": {
+        "type": "function",
+        "status": "planned",
+        "path": "subsystems/财务",
+        "workspace_id": null,
+        "agent_team_model": "多Agent协作（会计、出纳、审计）"
+      },
+      "tags": ["function", "core"],
+      "created_at": "2026-04-01T14:30:00Z",
+      "updated_at": "2026-04-01T14:30:00Z"
+    },
+
+    {
+      "id": "subsystem.法务",
+      "type": "subsystem",
+      "name": "法务合规子系统",
+      "description": "负责合同审核、法律合规、知识产权保护、风险评估",
+      "properties": {
+        "type": "function",
+        "status": "planned",
+        "path": "subsystems/法务",
+        "workspace_id": null,
+        "agent_team_model": "多Agent协作（法务、合规、风控）"
+      },
+      "tags": ["function", "core"],
+      "created_at": "2026-04-01T14:30:00Z",
+      "updated_at": "2026-04-01T14:30:00Z"
+    },
+
+    {
+      "id": "subsystem.products",
+      "type": "subsystem",
+      "name": "产品线容器",
+      "description": "所有产品子系统的父节点",
+      "properties": {
+        "type": "container",
+        "status": "active",
+        "path": "subsystems/products"
+      },
+      "created_at": "2026-04-01T14:30:00Z",
+      "updated_at": "2026-04-01T14:30:00Z"
+    },
+
+    {
+      "id": "subsystem.products.example-product",
+      "type": "subsystem",
+      "name": "示例产品子系统",
+      "description": "示例产品线，展示产品类子系统的组织方式",
+      "properties": {
+        "type": "product",
+        "status": "template",
+        "path": "subsystems/products/example-product",
+        "workspace_id": null,
+        "agent_team_model": "多Agent协作（产品经理、开发、测试、运维）"
+      },
+      "tags": ["product", "template"],
+      "created_at": "2026-04-01T14:30:00Z",
+      "updated_at": "2026-04-01T14:30:00Z"
+    },
+
+    {
+      "id": "resource.cmux",
+      "type": "resource",
+      "name": "cmux终端",
+      "description": "多工作区终端管理器，每个子系统独立工作区",
+      "properties": {
+        "type": "terminal",
+        "status": "required",
+        "deployment": "独立Mac设备"
+      },
+      "created_at": "2026-04-01T14:30:00Z",
+      "updated_at": "2026-04-01T14:30:00Z"
+    },
+
+    {
+      "id": "resource.feishu",
+      "type": "resource",
+      "name": "飞书平台",
+      "description": "人类与Agent交互的主要界面",
+      "properties": {
+        "type": "external_service",
+        "access_level": "configured",
+        "status": "pending_setup"
+      },
+      "created_at": "2026-04-01T12:00:00Z",
+      "updated_at": "2026-04-01T12:00:00Z"
+    },
+
+    {
+      "id": "resource.claude-code",
+      "type": "resource",
+      "name": "Claude Code",
+      "description": "主要Agent运行平台",
+      "properties": {
+        "type": "ai_platform",
+        "access_level": "active",
+        "status": "available"
+      },
+      "created_at": "2026-04-01T12:00:00Z",
+      "updated_at": "2026-04-01T12:00:00Z"
+    },
+
+    {
+      "id": "goal.company.mvp-system",
+      "type": "goal",
+      "name": "完成MVP系统",
+      "description": "建立完整的文档驱动Agent运营系统",
+      "properties": {
+        "priority": "critical",
+        "status": "in_progress",
+        "deadline": "2026-06-30"
+      },
+      "created_at": "2026-04-01T12:00:00Z",
+      "updated_at": "2026-04-01T14:30:00Z"
+    },
+
+    {
+      "id": "goal.company.phase0",
+      "type": "goal",
+      "name": "Phase 0: 文档基础",
+      "description": "建立目录结构、核心文档、模板、schema、工具",
+      "properties": {
+        "priority": "critical",
+        "status": "completed",
+        "completed_at": "2026-04-01T14:00:00Z",
+        "parent_goal": "goal.company.mvp-system"
+      },
+      "created_at": "2026-04-01T12:00:00Z",
+      "updated_at": "2026-04-01T14:30:00Z"
+    },
+
+    {
+      "id": "goal.company.phase1",
+      "type": "goal",
+      "name": "Phase 1: 子系统定义",
+      "description": "创建首批子系统（财务、法务、示例产品）",
+      "properties": {
+        "priority": "high",
+        "status": "pending",
+        "parent_goal": "goal.company.mvp-system"
+      },
+      "created_at": "2026-04-01T14:30:00Z",
+      "updated_at": "2026-04-01T14:30:00Z"
+    },
+
+    {
+      "id": "pattern.file-scope-boundary",
+      "type": "pattern",
+      "name": "文件范围边界模式",
+      "description": "子系统边界由文件目录范围定义，而非岗位角色",
+      "properties": {
+        "category": "organization",
+        "status": "adopted"
+      },
+      "created_at": "2026-04-01T14:30:00Z",
+      "updated_at": "2026-04-01T14:30:00Z"
+    },
+
+    {
+      "id": "pattern.multi-agent-team",
+      "type": "pattern",
+      "name": "多Agent协作团队模式",
+      "description": "同一文件范围内，根据任务需要组建多Agent协作团队",
+      "properties": {
+        "category": "execution",
+        "status": "adopted"
+      },
+      "created_at": "2026-04-01T14:30:00Z",
+      "updated_at": "2026-04-01T14:30:00Z"
+    },
+
+    {
+      "id": "pattern.cmux-workspace",
+      "type": "pattern",
+      "name": "cmux工作区模式",
+      "description": "每个活跃子系统在cmux中拥有独立工作区",
+      "properties": {
+        "category": "deployment",
+        "status": "adopted"
+      },
+      "created_at": "2026-04-01T14:30:00Z",
+      "updated_at": "2026-04-01T14:30:00Z"
+    }
+  ],
+
+  "relations": [
+    {
+      "id": "rel-001",
+      "type": "owns",
+      "source": "company",
+      "target": "subsystem.财务",
+      "weight": 1.0,
+      "properties": {
+        "since": "2026-04-01",
+        "type": "function"
+      }
+    },
+
+    {
+      "id": "rel-002",
+      "type": "owns",
+      "source": "company",
+      "target": "subsystem.法务",
+      "weight": 1.0,
+      "properties": {
+        "since": "2026-04-01",
+        "type": "function"
+      }
+    },
+
+    {
+      "id": "rel-003",
+      "type": "owns",
+      "source": "company",
+      "target": "subsystem.products",
+      "weight": 1.0,
+      "properties": {
+        "type": "container"
+      }
+    },
+
+    {
+      "id": "rel-004",
+      "type": "owns",
+      "source": "subsystem.products",
+      "target": "subsystem.products.example-product",
+      "weight": 1.0,
+      "properties": {
+        "type": "product"
+      }
+    },
+
+    {
+      "id": "rel-005",
+      "type": "applies",
+      "source": "company",
+      "target": "pattern.file-scope-boundary",
+      "weight": 1.0
+    },
+
+    {
+      "id": "rel-006",
+      "type": "applies",
+      "source": "company",
+      "target": "pattern.multi-agent-team",
+      "weight": 1.0
+    },
+
+    {
+      "id": "rel-007",
+      "type": "applies",
+      "source": "company",
+      "target": "pattern.cmux-workspace",
+      "weight": 1.0
+    },
+
+    {
+      "id": "rel-008",
+      "type": "breaks_down_to",
+      "source": "goal.company.mvp-system",
+      "target": "goal.company.phase0",
+      "weight": 1.0
+    },
+
+    {
+      "id": "rel-009",
+      "type": "breaks_down_to",
+      "source": "goal.company.mvp-system",
+      "target": "goal.company.phase1",
+      "weight": 1.0
+    },
+
+    {
+      "id": "rel-010",
+      "type": "supports",
+      "source": "resource.cmux",
+      "target": "company",
+      "weight": 1.0,
+      "properties": {
+        "support_type": "infrastructure"
+      }
+    },
+
+    {
+      "id": "rel-011",
+      "type": "supports",
+      "source": "resource.claude-code",
+      "target": "company",
+      "weight": 1.0,
+      "properties": {
+        "support_type": "runtime"
+      }
+    },
+
+    {
+      "id": "rel-012",
+      "type": "triggers",
+      "source": "resource.feishu",
+      "target": "company",
+      "weight": 0.9,
+      "properties": {
+        "trigger_type": "human_input"
+      }
+    }
+  ],
+
+  "views": {
+    "organizational": [
+      "company",
+      "subsystem.财务",
+      "subsystem.法务",
+      "subsystem.products",
+      "subsystem.products.example-product"
+    ],
+
+    "resource": [
+      "resource.cmux",
+      "resource.feishu",
+      "resource.claude-code"
+    ],
+
+    "goal": [
+      "goal.company.mvp-system",
+      "goal.company.phase0",
+      "goal.company.phase1"
+    ],
+
+    "pattern": [
+      "pattern.file-scope-boundary",
+      "pattern.multi-agent-team",
+      "pattern.cmux-workspace"
+    ]
+  }
+}
