@@ -4,35 +4,32 @@
 
 **Goal:** Create Orchestrator Agent that monitors company operations, coordinates subsystems via inbox/outbox file messaging, and provides feedback to humans via cc-connector.
 
-**Architecture:** Claude Code with CronCreate-based monitoring loop (10 min interval). Uses SQLite for task system monitoring, shared/messages/ for inter-agent communication, and cc-connector skill for human notifications.
+**Architecture:** Claude Code with CronCreate-based monitoring loop (10 min interval). Uses cops CLI for task system monitoring, per-subsystem inbox/outbox directories for inter-agent communication, and cc-connector skill for human notifications.
 
-**Tech Stack:** Claude Code, CronCreate, SQLite (cops.db), cc-connector skill
+**Tech Stack:** Claude Code, CronCreate, cops CLI, cc-connector skill
 
 ---
 
 ## File Structure Overview
 
 ```
-company-ops/
+company-ops/                    ← Orchestrator 工作目录
 ├── CLAUDE.md                    # Orchestrator identity and instructions
+├── inbox/                       # 发给 Orchestrator 的消息
+├── outbox/                      # Orchestrator 的回复
 ├── orchestrator/
 │   ├── logs/                    # Monitoring logs
 │   └── reports/                 # Generated reports
-├── shared/
-│   └── messages/                # Agent 间通信目录
-│       ├── inbox-orchestrator/
-│       ├── inbox-finance/
-│       ├── inbox-legal/
-│       ├── outbox-orchestrator/
-│       ├── outbox-finance/
-│       ├── outbox-legal/
-│       └── processed/
-├── subsystems/
-│   ├── _registry.json           # (exists) Subsystem registry
-│   └── task-system/
-│       └── data/cops.db         # (exists) Task database
-└── .claude/
-    └── scheduled_tasks.json     # Cron task configuration
+../subsystems/                   ← 子系统（父目录）
+├── 财务/
+│   ├── inbox/                   # 发给财务的消息
+│   ├── outbox/                  # 财务的回复
+│   └── CLAUDE.md
+├── 法务/
+│   ├── inbox/                   # 发给法务的消息
+│   ├── outbox/                  # 法务的回复
+│   └── CLAUDE.md
+└── _registry.json               # Subsystem registry
 ```
 
 ---
@@ -40,9 +37,12 @@ company-ops/
 ## Task 1: Create Directory Structure
 
 **Files:**
+- Create: `company-ops/inbox/.gitkeep`
+- Create: `company-ops/outbox/.gitkeep`
 - Create: `company-ops/orchestrator/logs/.gitkeep`
 - Create: `company-ops/orchestrator/reports/.gitkeep`
-- Create: `company-ops/shared/messages/{inbox-orchestrator,inbox-finance,inbox-legal,outbox-orchestrator,outbox-finance,outbox-legal,processed}/.gitkeep`
+- 确保 `subsystems/财务/inbox/.gitkeep` 和 `subsystems/财务/outbox/.gitkeep` 存在
+- 确保 `subsystems/法务/inbox/.gitkeep` 和 `subsystems/法务/outbox/.gitkeep` 存在
 
 - [x] **Step 1: Create orchestrator directory structure**
 
@@ -55,18 +55,18 @@ touch company-ops/orchestrator/reports/.gitkeep
 - [x] **Step 2: Create shared messages directory structure**
 
 ```bash
-mkdir -p company-ops/shared/messages/{inbox-orchestrator,inbox-finance,inbox-legal,outbox-orchestrator,outbox-finance,outbox-legal,processed}
+mkdir -p company-ops/inbox company-ops/outbox
 ```
 
 - [ ] **Step 3: Verify directory creation**
 
-Run: `ls -laR company-ops/orchestrator/ company-ops/shared/messages/`
+Run: `ls -laR company-ops/inbox/ company-ops/outbox/ company-ops/orchestrator/`
 Expected: Shows complete directory structure
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add company-ops/orchestrator/ company-ops/shared/messages/
+git add company-ops/inbox company-ops/outbox company-ops/orchestrator/
 git commit -m "feat(orchestrator): create directory structure for logs, reports, and message passing"
 ```
 
@@ -133,7 +133,17 @@ cat subsystems/_registry.json >> "$LOG_FILE" 2>&1 || echo "No registry found" >>
 
 # 4. Check inbox
 echo "## Inbox" >> "$LOG_FILE"
-ls shared/messages/inbox-orchestrator/ >> "$LOG_FILE" 2>&1 || echo "Inbox empty" >> "$LOG_FILE"
+ls inbox/ >> "$LOG_FILE" 2>&1 || echo "Inbox empty" >> "$LOG_FILE"
+
+# 5. Check subsystem inboxes (跨 Agent 通信)
+echo "## Subsystem Inboxes" >> "$LOG_FILE"
+ls ../subsystems/财务/inbox/ >> "$LOG_FILE" 2>&1 || echo "财务 inbox empty" >> "$LOG_FILE"
+ls ../subsystems/法务/inbox/ >> "$LOG_FILE" 2>&1 || echo "法务 inbox empty" >> "$LOG_FILE"
+
+# 6. Check subsystem outboxes (获取回复)
+echo "## Subsystem Outboxes" >> "$LOG_FILE"
+ls ../subsystems/财务/outbox/ >> "$LOG_FILE" 2>&1 || echo "财务 outbox empty" >> "$LOG_FILE"
+ls ../subsystems/法务/outbox/ >> "$LOG_FILE" 2>&1 || echo "法务 outbox empty" >> "$LOG_FILE"
 
 echo "=== Monitoring Complete ===" >> "$LOG_FILE"
 ```
@@ -180,7 +190,7 @@ Manually trigger the monitoring prompt to verify it works correctly.
 
 ```bash
 filename="msg_$(date +%Y%m%d_%H%M%S).json"
-cat > "shared/messages/inbox-orchestrator/$filename" << EOF
+cat > "inbox/$filename" << EOF
 {
   "id": "msg_$(date +%Y%m%d_%H%M%S)",
   "from": "finance",
@@ -194,7 +204,7 @@ EOF
 
 - [ ] **Step 2: Verify message in inbox**
 
-Run: `ls shared/messages/inbox-orchestrator/`
+Run: `ls inbox/`
 Expected: Shows msg_YYYYMMDD_HHMMSS.json file
 
 - [ ] **Step 3: Process message and write reply**
@@ -203,7 +213,7 @@ Read the message, process it, write reply to outbox, move original to processed.
 
 - [ ] **Step 4: Verify reply and archival**
 
-Run: `ls shared/messages/outbox-orchestrator/ && ls shared/messages/processed/`
+Run: `ls outbox/`
 Expected: Reply in outbox, original in processed
 
 ---
@@ -228,7 +238,7 @@ git commit -m "docs(orchestrator): add cc-connector usage guide"
 
 - [ ] **Step 1: Verify directory structure**
 
-Run: `ls -laR company-ops/orchestrator/ company-ops/shared/messages/`
+Run: `ls -laR company-ops/inbox/ company-ops/outbox/ company-ops/orchestrator/`
 Expected: Shows complete structure
 
 - [ ] **Step 2: Verify CLAUDE.md with updated protocol**
@@ -266,7 +276,8 @@ This plan covers **7 tasks** implementing:
 
 **Key Components:**
 - `company-ops/CLAUDE.md` - Orchestrator identity + communication protocol
-- `company-ops/shared/messages/` - Inter-agent inbox/outbox directories
+- `company-ops/inbox/` - Orchestrator 收件箱
+- `company-ops/outbox/` - Orchestrator 发件箱
 - `company-ops/orchestrator/monitor.sh` - Monitoring script
 - CronCreate scheduled task - Every 10 minutes
 

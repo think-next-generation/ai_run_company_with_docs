@@ -22,22 +22,37 @@
 
 1. **检查系统状态**
    ```bash
-   sqlite3 subsystems/task-system/data/cops.db "SELECT id, title, status, priority FROM tasks ORDER BY updated_at DESC;"
+   cops task list
+   cops status
    ```
 
-2. **检查未回答问题**
+2. **检查任务看板**
    ```bash
-   sqlite3 subsystems/task-system/data/cops.db "SELECT id, question_text, urgency FROM questions WHERE answer IS NULL;"
+   cops board
    ```
 
-3. **查看子系统状态**
+3. **检查 Agent 状态**
    ```bash
-   cat subsystems/_registry.json
+   cops agent status
    ```
 
-4. **检查收件箱**
+4. **检查子系统状态**
    ```bash
-   ls shared/messages/inbox-orchestrator/
+   cat ../subsystems/_registry.json
+   ```
+
+5. **检查收件箱** (所有 inbox)
+   ```bash
+   ls inbox/                       # 发给 Orchestrator 的消息
+   ls ../subsystems/财务/inbox/    # 发给财务的消息
+   ls ../subsystems/法务/inbox/    # 发给法务的消息
+   ```
+
+6. **检查发件箱** (获取回复)
+   ```bash
+   ls outbox/                      # Orchestrator 的回复
+   ls ../subsystems/财务/outbox/   # 财务的回复
+   ls ../subsystems/法务/outbox/   # 法务的回复
    ```
 
 ### 决策逻辑
@@ -62,15 +77,29 @@
 ### 目录结构
 
 ```
-shared/messages/
-├── inbox-orchestrator/    ← 发给 Orchestrator 的消息
-├── inbox-finance/         ← 发给财务子系统 的消息
-├── inbox-legal/           ← 发给法务子系统的消息
-├── outbox-orchestrator/   ← Orchestrator 的回复
-├── outbox-finance/        ← 财务的回复
-├── outbox-legal/          ← 法务的回复
-└── processed/             ← 已处理的消息归档
+company-ops/
+├── inbox/                    ← 发给 Orchestrator 的消息
+├── outbox/                   ← Orchestrator 的回复
+├── orchestrator/
+│   ├── logs/                 ← 监控日志
+│   └── reports/              ← 报告
+└── ../subsystems/            ← 子系统（父目录）
+    ├── 财务/
+    │   ├── inbox/            ← 发给财务的消息
+    │   ├── outbox/           ← 财务的回复
+    │   └── CLAUDE.md
+    ├── 法务/
+    │   ├── inbox/            ← 发给法务的消息
+    │   ├── outbox/           ← 法务的回复
+    │   └── CLAUDE.md
+    └── _registry.json
 ```
+
+### 通信规则
+
+- **Orchestrator 职责**：读取每个子系统的 inbox，了解他们之间的通信
+- **各子系统**：只读取自己文件夹下的 inbox/outbox
+- **消息存储位置**：每个角色只读写自己目录下的 inbox/outbox
 
 ### 消息文件命名
 
@@ -114,13 +143,13 @@ filename="msg_$(date +%Y%m%d_%H%M%S).json"
 ### 发送消息给子系统
 
 ```bash
-# 1. 写消息文件到 inbox
+# 1. 写消息文件到目标子系统的 inbox
 filename="msg_$(date +%Y%m%d_%H%M%S).json"
-cat > "shared/messages/inbox-finance/$filename" << 'EOF'
+cat > "../subsystems/财务/inbox/$filename" << 'EOF'
 {
   "id": "msg_20260409_103302",
   "from": "orchestrator",
-  "to": "finance",
+  "to": "财务",
   "type": "question",
   "content": "本月财务报表准备好了吗？",
   "created_at": "2026-04-09T10:33:02+08:00"
@@ -130,7 +159,7 @@ EOF
 # 2. 通过 cmux send 即时通知目标 Agent
 # 先查找目标 surface ID: cmux list-surfaces
 # 然后发送通知:
-cmux send --surface <surface-id> "收到新消息，请读取 inbox-finance$(printf '\n')"
+cmux send --surface <surface-id> "收到新消息，请读取 inbox$(printf '\n')"
 ```
 
 ### 完整通信流程
@@ -151,26 +180,30 @@ cmux send --surface <surface-id> "收到新消息，请读取 inbox-finance$(pri
 ### 检查并处理 inbox
 
 ```bash
-# 列出收件箱中的消息
-ls shared/messages/inbox-orchestrator/
+# 检查发给 Orchestrator 的消息
+ls inbox/
+
+# 检查发给各子系统的消息（Orchestrator 需要了解所有通信）
+ls ../subsystems/财务/inbox/
+ls ../subsystems/法务/inbox/
 
 # 读取消息
-cat shared/messages/inbox-orchestrator/msg_20260409_103302.json
+cat inbox/msg_20260409_103302.json
 
-# 处理完毕后归档
-mv shared/messages/inbox-orchestrator/msg_20260409_103302.json shared/messages/processed/
+# 处理完毕后归档（移到 processed 目录或其他位置）
+mv inbox/msg_20260409_103302.json ../processed/  # 需创建 processed 目录
 ```
 
 ### 写回复到 outbox
 
 ```bash
 filename="reply_$(date +%Y%m%d_%H%M%S).json"
-cat > "shared/messages/outbox-orchestrator/$filename" << 'EOF'
+cat > "outbox/$filename" << 'EOF'
 {
   "id": "reply_20260409_103345",
   "in_reply_to": "msg_20260409_103302",
   "from": "orchestrator",
-  "to": "finance",
+  "to": "财务",
   "type": "answer",
   "content": "已了解，请继续准备。",
   "created_at": "2026-04-09T10:33:45+08:00"

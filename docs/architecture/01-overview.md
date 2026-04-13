@@ -177,16 +177,16 @@
 Orchestrator                                  财务子系统
 ───────────────────────                      ──────────────────────
 1. 写 msg_YYYYMMDD_HHMMSS.json
-   到 inbox-finance/
+   到 subsystems/财务/inbox/
 2. cmux send --surface <id>
    "收到新消息，请读取 inbox"
                                              3. 收到注入文本，立即响应
-                                             4. 读取并处理 inbox-finance/ 消息
-                                             5. 写 reply_*.json 到 outbox-finance/
+                                             4. 读取并处理 subsystems/财务/inbox/ 消息
+                                             5. 写 reply_*.json 到 subsystems/财务/outbox/
                                              6. 原消息移到 processed/
                                              7. cmux send 通知发送方
 8. CronCreate 轮询（兜底，10分钟间隔）
-   检查 outbox-finance/
+   检查 subsystems/财务/outbox/
 9. 读取回复内容
 ```
 
@@ -197,10 +197,17 @@ Orchestrator                                  财务子系统
 目录结构：
 
 ```
-shared/messages/
-├── inbox-{agent}/      ← 各 Agent 的收件箱
-├── outbox-{agent}/     ← 各 Agent 的发件箱（回复）
-└── processed/          ← 已处理的消息归档
+company-ops/                    ← Orchestrator 工作目录
+├── inbox/                      ← 发给 Orchestrator 的消息
+├── outbox/                     ← Orchestrator 的回复
+subsystems/                     ← 子系统（父目录）
+├── 财务/
+│   ├── inbox/                 ← 发给财务的消息
+│   └── outbox/                ← 财务的回复
+├── 法务/
+│   ├── inbox/                 ← 发给法务的消息
+│   └── outbox/                ← 法务的回复
+└── _registry.json
 ```
 
 消息文件命名: `{type}_{YYYYMMDD_HHMMSS}.json`（如 `msg_20260409_103302.json`）

@@ -11,23 +11,24 @@
 ```
 company-ops/                           ← Orchestrator 工作目录
 ├── CLAUDE.md                          ← Orchestrator 身份 + 通信协议
-├── orchestrator/logs/                 ← 监控日志
-├── orchestrator/reports/              ← 报告
-├── shared/messages/                   ← Agent 间 inbox/outbox
-│   ├── inbox-orchestrator/
-│   ├── inbox-{agent}/
-│   ├── outbox-orchestrator/
-│   ├── outbox-{agent}/
-│   └── processed/
-├── subsystems/
+├── inbox/                             ← 发给 Orchestrator 的消息
+├── outbox/                            ← Orchestrator 的回复
+├── orchestrator/
+│   ├── logs/                         ← 监控日志
+│   └── reports/                      ← 报告
+├── subsystems/                        ← 子系统（注意：在 company-ops 内）
 │   ├── _registry.json                 ← 子系统注册表
-│   ├── task-system/                   ← cops 任务系统 (Rust + SQLite)
+│   ├── task-system/                  ← cops 任务系统 (Rust + SQLite)
 │   ├── 财务/                          ← 财务 Agent 工作目录
-│   │   └── CLAUDE.md
+│   │   ├── CLAUDE.md
+│   │   ├── inbox/                    ← 发给财务的消息
+│   │   └── outbox/                   ← 财务的回复
 │   ├── 法务/                          ← 法务 Agent 工作目录
-│   │   └── CLAUDE.md
+│   │   ├── CLAUDE.md
+│   │   ├── inbox/                    ← 发给法务的消息
+│   │   └── outbox/                   ← 法务的回复
 │   └── {新子系统}/                    ← 后续新增子系统
-└── data/cops.db                       ← 任务数据库
+└── data/cops.db                       ← 任务数据库（通过 cops 安装）
 ```
 
 **角色定义**：
@@ -60,7 +61,7 @@ Orchestrator 启动后：
 1. 加载 `company-ops/CLAUDE.md`
 2. 自动创建 CronCreate 10 分钟定时监控
 3. 接管飞书 Orchestrator Bot（Bot 1）
-4. 检查 `inbox-orchestrator/` 是否有积压消息
+4. 检查 `inbox/` 是否有积压消息
 
 ### 2.3 按需启动部门 Agent
 
@@ -86,7 +87,7 @@ claude
 | **cmux 终端** | 人类 ↔ Agent 直接对话 | ❌ 无记录 | 即时 |
 | **Feishu Bot 1 (Orchestrator)** | 人类 ↔ Orchestrator 远程交互 | ✅ 飞书记录 | 即时 |
 | **Feishu Bot 2 (可分配)** | 人类 ↔ 部门 Agent 远程交互 | ✅ 飞书记录 | 即时 |
-| **inbox/outbox 文件** | Agent ↔ Agent 结构化消息 | ✅ 文件持久 | 需轮询 |
+**inbox/outbox 文件** | Agent ↔ Agent 结构化消息（每个角色独立目录） | ✅ 文件持久 | 需轮询 |
 | **cmux send** | Agent → Agent 即时通知 | ❌ 无记录 | 即时 |
 | **cops CLI/DB** | 任务状态管理（唯一真相源） | ✅ SQLite | 按需 |
 
@@ -148,7 +149,7 @@ inbox/outbox **不是**任务分配的必经通道。任务分配通过 cops + c
 
 ```
 任务分配流程：  Orchestrator → cops 创建/指派 → cmux send 通知 → Agent 执行
-建议/反馈流程： Agent A → inbox-{agent}/ → cmux send 通知 → Agent B 参考
+建议/反馈流程： Agent A → 子系统A的 inbox/ → cmux send 通知 → Agent B 参考其 own outbox/
 ```
 
 ---
@@ -212,23 +213,23 @@ inbox/outbox **不是**任务分配的必经通道。任务分配通过 cops + c
        人类: "确认"
 
 步骤4: Orchestrator 创建任务
-       /cops:create "编制 Q2 财务预算报告" --priority high --assignee 财务 （返回任务ID1）
-       /cops:create "审核预算报告合规性" --priority medium --assignee 法务 （返回任务ID2）
+       cops create "编制 Q2 财务预算报告" --priority high --assignee 财务 （返回任务ID1）
+       cops create "审核预算报告合规性" --priority medium --assignee 法务 （返回任务ID2）
        → cops DB: 任务状态 NEW → ASSIGNED
 
 步骤5: Orchestrator 通知部门 Agent
        cmux send --surface <财务tab> "收到新任务，任务ID为：ID1"
 
 步骤6: 财务 Agent 接收
-       查看cops任务ID1 → 标记任务 IN_PROGRESS in cops
+       cops task start <task-id>    # 标记任务 IN_PROGRESS
        执行任务...
 
 步骤7: 财务 Agent 完成
-       标记任务 COMPLETED in cops
+       cops task complete <task-id> # 标记任务 COMPLETED
        cmux send --surface <orchestrator-tab> "任务完成: Q2 财务预算报告"
 
 步骤8: Orchestrator 汇报
-       通过飞书 Bot 1 和 Orchestrator outbox（Orchestrator outbox的消息都是发给人类） 通知人类
+       通过飞书 Bot 1 和 outbox/（消息都是发给人类） 通知人类
 ```
 
 #### 场景 B：部门 Agent 识别需求需创建任务
@@ -238,7 +239,7 @@ inbox/outbox **不是**任务分配的必经通道。任务分配通过 cops + c
        "发现 Q1 报表有误，需要修正"
 
 步骤2: 财务 Agent 向 Orchestrator 申请会话权限
-       inbox-orchestrator/msg_*.json:
+       写入 company-ops/inbox/msg_*.json:   ← 发送给 Orchestrator
        {
          "type": "bot_request",
          "content": "发现 Q1 报表有误，可能需要修正，需与人类沟通",
@@ -266,20 +267,19 @@ inbox/outbox **不是**任务分配的必经通道。任务分配通过 cops + c
 
 ```
 步骤1: 财务 Agent 执行任务中需要法务意见
-       inbox-法务/msg_*.json:
+       写入法务的 inbox (../subsystems/法务/inbox/msg_*.json):
        {
          "type": "question",
          "content": "Q2 预算中涉及跨境支付，请确认合规要求",
-         "from": "finance"
+         "from": "财务"
        }
        cmux send → 法务 Agent
 
 步骤2: 法务 Agent 判断是否需要成为任务
-       - 如果是简单问答 → 直接回复，不需要创建任务
-         outbox-法务/reply_*.json + cmux send → 财务
+       - 如果是简单问答 → 直接回复，写入财务的 outbox/
        - 如果需要深入工作 → 向 Orchestrator 申请创建任务
 
-步骤3: 财务 Agent 继续执行，参考法务回复
+步骤3: 财务 Agent 继续执行，读取法务的回复 (../subsystems/法务/outbox/)
 ```
 
 ### 4.5 inbox 消息 vs 任务的关系
@@ -305,19 +305,27 @@ inbox/outbox **不是**任务分配的必经通道。任务分配通过 cops + c
 1. 检查 cops 任务状态
    cops board show
 
-2. 检查 inbox-orchestrator/
-   处理 Agent 发来的消息和任务请求
+2. 检查 Orchestrator 收件箱 (inbox/)
+   处理人类和 Agent 发来的消息
 
-3. 检查 Agent 忙碌状态
+3. 检查各子系统收件箱 (了解跨 Agent 通信)
+   - ls ../subsystems/财务/inbox/
+   - ls ../subsystems/法务/inbox/
+
+4. 检查各子系统发件箱 (获取回复)
+   - ls ../subsystems/财务/outbox/
+   - ls ../subsystems/法务/outbox/
+
+5. 检查 Agent 忙碌状态
    基于 cops 中 IN_PROGRESS 的任务判断每个 Agent 是否忙碌
 
-4. 检查子系统状态
-   cat subsystems/_registry.json
+6. 检查子系统状态
+   cat ../subsystems/_registry.json
 
-5. 处理待分配任务
+7. 处理待分配任务
    对于 NEW 状态的任务 → 研究任务领域 → 分配给合适的 Agent(如果没有合适的agent，可以与人类对话商议创建新子项目)
 
-6. 记录日志
+8. 记录日志
    echo "$(date -Iseconds) - 监控循环完成" >> orchestrator/logs/monitor.log
 ```
 
@@ -403,7 +411,7 @@ Orchestrator 汇报人类
 Agent 请求与人类直接交互
     │
     ▼
-Agent → inbox-orchestrator/ (request_bot: true)
+Agent → inbox/ (request_bot: true)
     │
     ▼
 cmux send → Orchestrator
