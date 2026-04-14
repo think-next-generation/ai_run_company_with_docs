@@ -227,6 +227,116 @@ EOF
 echo "$(date -Iseconds) - 监控循环完成" >> orchestrator/logs/monitor.log
 ```
 
+
+## 知识库查询
+
+使用知识引擎查询组织图和 Wiki：
+
+```bash
+python .system/lib/graph/query_knowledge.py "<问题>"
+```
+
+### 示例
+
+```bash
+# 查询财务子系统信息
+python .system/lib/graph/query_knowledge.py "财务 子系统目标"
+
+# 查询 Claude Code 相关信息
+python .system/lib/graph/query_knowledge.py "Claude Code"
+```
+
+### 知识来源
+
+- **Organization Graph**: `company-ops/global-graph.json` — 公司组织结构、目标、任务系统配置
+- **Wiki**: `~/wiki` — 文档、规格、设计文档
+
+## 知识沉淀（Auto-Ingest）
+
+重要任务完成后，将任务执行的知识沉淀到 Wiki：
+
+### 自动沉淀触发条件
+
+| 优先级 | 是否沉淀 |
+|--------|----------|
+| high | ✅ 自动 |
+| critical | ✅ 自动 |
+| medium | ❌ |
+| low | ❌ |
+
+### 沉淀示例
+
+```python
+import sys
+sys.path.insert(0, '.system/lib/graph')
+from accumulator import KnowledgeAccumulator
+
+acc = KnowledgeAccumulator()
+
+# 读取 spec 文件内容
+with open('docs/superpowers/specs/2026-04-09-system-workflow-design.md') as f:
+    spec_content = f.read()
+
+# 执行知识沉淀
+result = acc.accumulate_task_spec(
+    task_title='system-workflow-design',
+    spec_content=spec_content,
+    spec_file_path='docs/superpowers/specs/2026-04-09-system-workflow-design.md',
+    priority='high',
+    tags=['workflow', 'orchestrator', 'design'],
+    force=True  # 强制重建（如果已存在）
+)
+```
+
+### 返回结果处理
+
+沉淀结果包含 `improvements` 字段，列出需要执行的任务：
+
+```python
+{
+    "skipped": False,
+    "path": "/Users/mac/wiki/comparisons/system-workflow-design.md",
+    "entities": [...],
+    "wikilinks": [...],
+    "improvements": {
+        "required": [
+            {"action": "add_wikilinks", "description": "添加更多相关 wikilinks"},
+            {"action": "fill_knowledge_gained", "description": "填充知识收获内容", "template": "..."}
+        ],
+        "optional": [
+            {"action": "fill_related_tasks", "description": "填充相关任务引用"},
+            {"action": "verify_index", "description": "验证 index.md 条目格式"},
+            {"action": "consider_split", "description": "考虑拆分大型页面"}
+        ]
+    }
+}
+```
+
+### 执行改进任务
+
+对于可自动执行的改进任务：
+
+```python
+# 执行必需的改进
+for improvement in result.get("improvements", {}).get("required", []):
+    apply_result = acc.apply_improvement(
+        improvement=improvement,
+        wiki_page_path=result["path"]
+    )
+    if apply_result.get("applied"):
+        print(f"已执行: {improvement['action']}")
+```
+
+### 改进任务类型
+
+| Action | 说明 | 可自动执行 |
+|--------|------|------------|
+| `add_wikilinks` | 添加更多 wikilinks | ❌ 需 LLM 判断 |
+| `fill_knowledge_gained` | 填充知识收获 | ✅ |
+| `fill_related_tasks` | 填充相关任务 | ❌ 需查任务系统 |
+| `verify_index` | 验证 index.md | ✅ |
+| `consider_split` | 检查是否需要拆分 | ❌ 需人工判断 |
+
 ## 相关文档
 
 - 任务系统设计: docs/superpowers/specs/2026-04-07-cops-task-system-design.md

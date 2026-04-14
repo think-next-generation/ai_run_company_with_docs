@@ -56,3 +56,4 @@ human/inbox/*.processed
 
 # Local editor settings
 *.sublime-*
+data/
