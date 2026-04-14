@@ -21,17 +21,17 @@ from pathlib import Path
 SUBSYSTEM_TYPES = {
     "function": {
         "description": "职能部门",
-        "default_dirs": ["inbox", "outbox", "state", "data", "scripts", "libs", "docs", "workspace"],
+        "default_dirs": ["inbox", "outbox", "state", "data", "src", "scripts", "libs", "docs", "workspace"],
         "default_files": ["SPEC.md", "CONTRACT.yaml", "CAPABILITIES.yaml", "local-graph.json"]
     },
     "product": {
         "description": "产品线",
-        "default_dirs": ["inbox", "outbox", "state", "src", "tests", "docs", "scripts", "libs", "workspace"],
+        "default_dirs": ["inbox", "outbox", "state", "src", "tests", "data", "docs", "scripts", "libs", "workspace"],
         "default_files": ["SPEC.md", "CONTRACT.yaml", "CAPABILITIES.yaml", "local-graph.json"]
     },
     "tool": {
         "description": "工具系统",
-        "default_dirs": ["inbox", "outbox", "state", "src", "bin", "config", "scripts", "libs", "docs"],
+        "default_dirs": ["inbox", "outbox", "state", "src", "bin", "config", "data", "scripts", "libs", "docs"],
         "default_files": ["SPEC.md", "CONTRACT.yaml", "CAPABILITIES.yaml", "local-graph.json"]
     }
 }
@@ -91,7 +91,8 @@ subsystems/{name}/
 │   ├── status.md
 │   └── metrics.yaml
 ├── data/               ← 数据存储
-├── scripts/            ← 工作脚本
+├── src/                ← 源代码/脚本
+├── scripts/            ← 自动化脚本
 ├── libs/               ← 本地库/依赖
 ├── docs/               ← 工作文档
 └── workspace/          ← 工作空间
@@ -209,6 +210,7 @@ subsystems/{name}/
 │   ├── status.md
 │   └── metrics.yaml
 ├── data/
+├── src/
 ├── scripts/
 ├── libs/
 ├── docs/

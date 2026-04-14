@@ -51,6 +51,9 @@ secrets/
 .system/graph-cache/*.lock
 .system/graph-cache/*.tmp
 
+inbox/*
+outbox/*
+
 # Human inbox processed items
 human/inbox/*.processed
 
