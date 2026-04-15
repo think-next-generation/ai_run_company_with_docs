@@ -60,6 +60,3 @@ human/inbox/*.processed
 # Local editor settings
 *.sublime-*
 data/
-
-# Claude Code skills (local, not committed)
-.claude/
