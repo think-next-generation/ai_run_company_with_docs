@@ -2,6 +2,6 @@
 ./.claude
 chat/
 
-subsystems
+subsystems/*
 tool-projects
 .DS_Store
